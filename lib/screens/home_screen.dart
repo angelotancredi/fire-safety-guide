@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final law = LawUpdate.fromFirestore(docs[index]);
-              return _buildLawCard(law);
+              return _buildLawCard(context, law);
             },
           );
         },
@@ -46,7 +46,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLawCard(LawUpdate law) {
+  Widget _buildLawCard(BuildContext context, LawUpdate law) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),

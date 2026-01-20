@@ -99,13 +99,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.darkGray,
-        title: const Text('인식 결과', style: TextStyle(color: Colors.white)),
-        content: Text(message, style: const TextStyle(color: Colors.white70)),
+        backgroundColor: AppTheme.pureWhite,
+        surfaceTintColor: AppTheme.pureWhite,
+        title: const Text('인식 결과', style: TextStyle(color: AppTheme.charcoal, fontWeight: FontWeight.bold)),
+        content: Text(message, style: TextStyle(color: AppTheme.charcoal.withOpacity(0.7))),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(color: AppTheme.safetyRed)),
+            child: const Text('확인', style: TextStyle(color: AppTheme.safetyRed, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -120,9 +121,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _takePhotoAndAnalyze,
         backgroundColor: AppTheme.safetyRed,
+        foregroundColor: Colors.white,
         shape: const CircleBorder(),
         elevation: 4,
-        child: const Icon(Icons.camera_alt, color: Colors.white, size: 28),
+        child: const Icon(Icons.camera_alt, size: 28),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -131,7 +133,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _selectedIndex = index;
           });
         },
-        backgroundColor: AppTheme.pureBlack,
+        backgroundColor: AppTheme.pureWhite,
         selectedItemColor: AppTheme.safetyRed,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
