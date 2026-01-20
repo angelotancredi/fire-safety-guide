@@ -78,66 +78,73 @@ class _SearchScreenState extends State<SearchScreen> {
                   return const Center(child: Text('일치하는 시설물이 없습니다.'));
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: filteredDocs.length,
-                  itemBuilder: (context, index) {
-                    final equipment = EquipmentCode.fromFirestore(filteredDocs[index]);
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DetailScreen(equipment: equipment),
-                        ),
-                      ),
-                      child: Card(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.lightGray,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.fire_extinguisher,
-                                  color: AppTheme.safetyRed,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      equipment.itemName,
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                            fontSize: 17,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      (filteredDocs[index].data() as Map<String, dynamic>)['category'] ?? '소방설비',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: AppTheme.charcoal.withOpacity(0.5),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.chevron_right, color: Colors.grey[300]),
-                            ],
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    await Future.delayed(const Duration(milliseconds: 800));
+                  },
+                  color: AppTheme.safetyRed,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final equipment = EquipmentCode.fromFirestore(filteredDocs[index]);
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DetailScreen(equipment: equipment),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.lightGray,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.fire_extinguisher,
+                                    color: AppTheme.safetyRed,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        equipment.itemName,
+                                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                              fontSize: 17,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        (filteredDocs[index].data() as Map<String, dynamic>)['category'] ?? '소방설비',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppTheme.charcoal.withOpacity(0.5),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.chevron_right, color: Colors.grey[300]),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
