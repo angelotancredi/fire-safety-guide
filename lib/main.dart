@@ -152,17 +152,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     }
   }
 
-    final equipment = EquipmentCode.fromFirestore(querySnapshot.docs.first);
-    
-    if (!mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetailScreen(equipment: equipment),
-      ),
-    );
-  }
-
   void _showErrorDialog(String message, {String? aiResult}) {
     showDialog(
       context: context,
