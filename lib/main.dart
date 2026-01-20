@@ -26,7 +26,7 @@ class FireSafetyApp extends StatelessWidget {
     return MaterialApp(
       title: '소방 세이프티 가이드',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: const MainNavigationScreen(),
     );
   }

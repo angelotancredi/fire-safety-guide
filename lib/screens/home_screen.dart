@@ -48,9 +48,8 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildLawCard(LawUpdate law) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -60,43 +59,38 @@ class HomeScreen extends StatelessWidget {
                 _buildPriorityChip(law.priority),
                 Text(
                   DateFormat('yyyy.MM.dd').format(law.publishDate),
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  style: TextStyle(color: Colors.grey[500], fontSize: 13),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               law.title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 19,
+                    height: 1.4,
+                  ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppTheme.safetyRed.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
+                color: AppTheme.lightGray,
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 law.category,
                 style: const TextStyle(
-                  color: AppTheme.safetyRed,
+                  color: AppTheme.charcoal,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               law.summary,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-                height: 1.5,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
@@ -109,16 +103,16 @@ class HomeScreen extends StatelessWidget {
   Widget _buildPriorityChip(String priority) {
     final isUrgent = priority == '긴급';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isUrgent ? AppTheme.safetyRed : Colors.grey[800],
+        color: isUrgent ? AppTheme.safetyRed : AppTheme.lightGray,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         priority,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
+        style: TextStyle(
+          color: isUrgent ? Colors.white : AppTheme.charcoal.withOpacity(0.6),
+          fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
       ),

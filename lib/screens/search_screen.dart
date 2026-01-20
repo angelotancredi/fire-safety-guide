@@ -32,11 +32,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   _searchQuery = value;
                 });
               },
+              style: const TextStyle(color: AppTheme.charcoal),
               decoration: InputDecoration(
                 hintText: '시설물 명칭을 입력하세요 (예: 소화기)',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.safetyRed),
+                hintStyle: TextStyle(color: AppTheme.charcoal.withOpacity(0.3)),
+                prefixIcon: Icon(Icons.search, color: AppTheme.charcoal.withOpacity(0.4)),
                 filled: true,
-                fillColor: AppTheme.darkGray,
+                fillColor: AppTheme.lightGray,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -75,9 +77,12 @@ class _SearchScreenState extends State<SearchScreen> {
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             title: Text(
                               equipment.itemName,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.charcoal,
+                              ),
                             ),
-                            trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                            trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
                             onTap: () {
                               Navigator.push(
                                 context,
