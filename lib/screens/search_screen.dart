@@ -48,54 +48,99 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           Expanded(
-            child: _searchQuery.isEmpty
-                ? const Center(child: Text('검색어를 입력하여 법적 기준을 찾아보세요.'))
-                : StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('equipment_codes')
-                        .where('item_name', isGreaterThanOrEqualTo: _searchQuery)
-                        .where('item_name', isLessThanOrEqualTo: '$_searchQuery\uf8ff')
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return const Center(child: Text('검색 중 오류가 발생했습니다.'));
-                      }
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator(color: AppTheme.safetyRed));
-                      }
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('equipment_codes')
+                  .orderBy('item_name')
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('데이터를 불러오는 중 오류가 발생했습니다.'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: AppTheme.safetyRed));
+                }
 
-                      final docs = snapshot.data?.docs ?? [];
-                      if (docs.isEmpty) {
-                        return const Center(child: Text('검색 결과가 없습니다.'));
-                      }
+                final docs = snapshot.data?.docs ?? [];
+                if (docs.isEmpty) {
+                  return const Center(child: Text('등록된 시설물이 없습니다.'));
+                }
 
-                      return ListView.builder(
-                        itemCount: docs.length,
-                        itemBuilder: (context, index) {
-                          final equipment = EquipmentCode.fromFirestore(docs[index]);
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            title: Text(
-                              equipment.itemName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.charcoal,
-                              ),
-                            ),
-                            trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DetailScreen(equipment: equipment),
+                // In-memory filtering for better UX with small datasets
+                final filteredDocs = _searchQuery.isEmpty
+                    ? docs
+                    : docs.where((doc) {
+                        final name = (doc.data() as Map<String, dynamic>)['item_name'] as String;
+                        return name.toLowerCase().contains(_searchQuery.toLowerCase());
+                      }).toList();
+
+                if (filteredDocs.isEmpty) {
+                  return const Center(child: Text('일치하는 시설물이 없습니다.'));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filteredDocs.length,
+                  itemBuilder: (context, index) {
+                    final equipment = EquipmentCode.fromFirestore(filteredDocs[index]);
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailScreen(equipment: equipment),
+                        ),
+                      ),
+                      child: Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.lightGray,
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+                                child: const Icon(
+                                  Icons.fire_extinguisher,
+                                  color: AppTheme.safetyRed,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      equipment.itemName,
+                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                            fontSize: 17,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      (filteredDocs[index].data() as Map<String, dynamic>)['category'] ?? '소방설비',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppTheme.charcoal.withOpacity(0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.chevron_right, color: Colors.grey[300]),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
