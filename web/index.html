@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -27,23 +28,25 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png" />
 
   <title>fire_safety_guide</title>
   <link rel="manifest" href="manifest.json">
 </head>
+
 <body>
   <script>
-    // Service Worker update logic
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js?v=' + new Date().getTime())
-          .then(function(reg) {
-            reg.onupdatefound = function() {
+        // Register the service worker without a dynamic timestamp to prevent loops
+        navigator.serviceWorker.register('flutter_service_worker.js')
+          .then(function (reg) {
+            reg.onupdatefound = function () {
               const installingWorker = reg.installing;
-              installingWorker.onstatechange = function() {
+              installingWorker.onstatechange = function () {
                 if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New content available, reload page
+                  // New version available, reload to apply
+                  console.log('New content available, reloading...');
                   window.location.reload();
                 }
               };
@@ -54,4 +57,5 @@
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
+
 </html>
