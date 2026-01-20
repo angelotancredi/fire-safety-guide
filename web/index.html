@@ -36,20 +36,20 @@
 
 <body>
   <script>
-    // Version v1.0.4 - Used to verify update
-    console.log('App Content Version: 1.0.4');
+    // System Version v1.0.5 - Loop Fix Attempt
+    console.log('App Bootstrapping (v1.0.5)...');
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('flutter_service_worker.js')
           .then(function (reg) {
             reg.onupdatefound = function () {
-              const installingWorker = reg.installing;
-              installingWorker.onstatechange = function () {
-                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New version available, force immediate reload
-                  console.log('New version detected! Force reloading...');
-                  window.location.reload(true);
+              const worker = reg.installing;
+              worker.onstatechange = function () {
+                if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Only log when a new version is ready. 
+                  // Avoid automatic reload which can trigger loops.
+                  console.log('New content available. Please refresh manually if changes are not seen.');
                 }
               };
             };
