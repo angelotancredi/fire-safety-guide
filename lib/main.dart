@@ -79,62 +79,65 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
 
-    final String? aiIdentified = await _visionService.identifyEquipment(photo);
-    
-    if (!mounted) return;
-    Navigator.pop(context); // Close loading dialog
-
-    if (aiIdentified == null || aiIdentified == '알 수 없음') {
-      _showErrorDialog("시설물을 식별할 수 없습니다. 다시 시도해 주세요.", aiResult: aiIdentified);
-      return;
-    }
-
-    final String itemName = aiIdentified.trim()
-        .replaceAll(RegExp(r'[^\w\sㄱ-ㅎ가-힣]'), '') // Remove punctuation
-        .replaceAll('입니다', '') // Remove common endings
-        .replaceAll('이에요', '')
-        .trim();
-
-    // 1. Exact or Prefix Search in Firestore
-    var querySnapshot = await FirebaseFirestore.instance
-        .collection('equipment_codes')
-        .where('item_name', isGreaterThanOrEqualTo: itemName)
-        .where('item_name', isLessThanOrEqualTo: '$itemName\uf8ff')
-        .get();
-
-    if (querySnapshot.docs.isEmpty) {
-      // 2. Strong Fuzzy Matching: Fetch all and compare normalized
-      final allDocs = await FirebaseFirestore.instance
+    try {
+      // 1. Fetch current equipment list from Firestore
+      final equipmentSnapshot = await FirebaseFirestore.instance
           .collection('equipment_codes')
           .get();
       
-      final searchName = itemName.toLowerCase().replaceAll(' ', '');
+      final List<String> equipmentNames = equipmentSnapshot.docs
+          .map((doc) => (doc.data() as Map<String, dynamic>)['item_name'] as String)
+          .toList();
+
+      // 2. Identify with AI using the dynamic list
+      final String? aiIdentified = await _visionService.identifyEquipment(photo, equipmentNames);
       
-      DocumentSnapshot? bestMatchDoc;
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
 
-      for (var doc in allDocs.docs) {
-        final rawDbName = (doc.data() as Map<String, dynamic>)['item_name'].toString();
-        final dbName = rawDbName.toLowerCase().replaceAll(' ', '');
-        
-        // Check if identified name is part of DB name (e.g., '소화기' in '분말소화기')
-        // Or if DB name is part of identified name
-        if (dbName.contains(searchName) || searchName.contains(dbName)) {
-          bestMatchDoc = doc;
-          break;
-        }
-
-        // Check for 2-character overlap (e.g., '발소' in '분말소화기')
-        if (searchName.length >= 2 && dbName.contains(searchName.substring(0, 2))) {
-           bestMatchDoc = doc;
-        }
-      }
-
-      if (bestMatchDoc == null) {
-        _showErrorDialog("'$itemName' (AI 인식)에 대한 상세 정보를 찾을 수 없습니다. (v1.0.3)", aiResult: aiIdentified);
+      if (aiIdentified == null || aiIdentified == '없음' || aiIdentified == '알 수 없음') {
+        _showErrorDialog("등록된 시설물 중 일치하는 것을 찾을 수 없습니다.", aiResult: aiIdentified);
         return;
       }
-      
-      final equipment = EquipmentCode.fromFirestore(bestMatchDoc);
+
+      final String itemName = aiIdentified.trim();
+
+      // 3. Directly search for the exact name AI picked from our list
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('equipment_codes')
+          .where('item_name', isEqualTo: itemName)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        // Fallback: If AI picked something slightly off despite instructions, use fuzzy match
+        final searchName = itemName.toLowerCase().replaceAll(' ', '');
+        DocumentSnapshot? fallbackDoc;
+        
+        for (var doc in equipmentSnapshot.docs) {
+          final dbName = (doc.data() as Map<String, dynamic>)['item_name'].toString().toLowerCase().replaceAll(' ', '');
+          if (dbName.contains(searchName) || searchName.contains(dbName)) {
+            fallbackDoc = doc;
+            break;
+          }
+        }
+
+        if (fallbackDoc == null) {
+          _showErrorDialog("'$itemName'에 대한 상세 정보를 찾을 수 없습니다. (v1.0.4)", aiResult: aiIdentified);
+          return;
+        }
+        
+        final equipment = EquipmentCode.fromFirestore(fallbackDoc);
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailScreen(equipment: equipment),
+          ),
+        );
+        return;
+      }
+
+      final equipment = EquipmentCode.fromFirestore(querySnapshot.docs.first);
       if (!mounted) return;
       Navigator.push(
         context,
@@ -142,8 +145,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           builder: (context) => DetailScreen(equipment: equipment),
         ),
       );
-      return;
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      _showErrorDialog("오류가 발생했습니다: $e");
     }
+  }
 
     final equipment = EquipmentCode.fromFirestore(querySnapshot.docs.first);
     
