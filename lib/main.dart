@@ -89,7 +89,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       return;
     }
 
-    final String itemName = aiIdentified.trim();
+    final String itemName = aiIdentified.trim()
+        .replaceAll(RegExp(r'[^\w\sㄱ-ㅎ가-힣]'), '') // Remove punctuation
+        .replaceAll('입니다', '') // Remove common endings
+        .replaceAll('이에요', '')
+        .trim();
 
     // 1. Exact or Prefix Search in Firestore
     var querySnapshot = await FirebaseFirestore.instance
@@ -99,7 +103,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         .get();
 
     if (querySnapshot.docs.isEmpty) {
-      // 2. Fuzzy Matching: Fetch all and compare
+      // 2. Strong Fuzzy Matching: Fetch all and compare normalized
       final allDocs = await FirebaseFirestore.instance
           .collection('equipment_codes')
           .get();
@@ -109,22 +113,24 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       DocumentSnapshot? bestMatchDoc;
 
       for (var doc in allDocs.docs) {
-        final dbName = (doc.data() as Map<String, dynamic>)['item_name'].toString().toLowerCase().replaceAll(' ', '');
+        final rawDbName = (doc.data() as Map<String, dynamic>)['item_name'].toString();
+        final dbName = rawDbName.toLowerCase().replaceAll(' ', '');
         
-        // Exact overlap check
+        // Check if identified name is part of DB name (e.g., '소화기' in '분말소화기')
+        // Or if DB name is part of identified name
         if (dbName.contains(searchName) || searchName.contains(dbName)) {
           bestMatchDoc = doc;
           break;
         }
 
-        // Partial match for common terms
+        // Check for 2-character overlap (e.g., '발소' in '분말소화기')
         if (searchName.length >= 2 && dbName.contains(searchName.substring(0, 2))) {
            bestMatchDoc = doc;
         }
       }
 
       if (bestMatchDoc == null) {
-        _showErrorDialog("'$itemName' (AI 인식)에 대한 상세 정보를 찾을 수 없습니다.", aiResult: aiIdentified);
+        _showErrorDialog("'$itemName' (AI 인식)에 대한 상세 정보를 찾을 수 없습니다. (v1.0.3)", aiResult: aiIdentified);
         return;
       }
       
