@@ -33,6 +33,25 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    // Service Worker update logic
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js?v=' + new Date().getTime())
+          .then(function(reg) {
+            reg.onupdatefound = function() {
+              const installingWorker = reg.installing;
+              installingWorker.onstatechange = function() {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New content available, reload page
+                  window.location.reload();
+                }
+              };
+            };
+          });
+      });
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

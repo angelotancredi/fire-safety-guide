@@ -14,34 +14,43 @@ class HomeScreen extends StatelessWidget {
         title: const Text('최신 법령 알림판'),
         centerTitle: false,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('law_updates')
-            .orderBy('publish_date', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const Center(child: Text('데이터를 불러오는데 실패했습니다.'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: AppTheme.safetyRed));
-          }
-
-          final docs = snapshot.data?.docs ?? [];
-          if (docs.isEmpty) {
-            return const Center(child: Text('게시된 법령이 없습니다.'));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: docs.length,
-            itemBuilder: (context, index) {
-              final law = LawUpdate.fromFirestore(docs[index]);
-              return _buildLawCard(context, law);
-            },
-          );
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Since we use StreamBuilder, it's already live. 
+          // We add a small delay to show the indicator for better UX.
+          await Future.delayed(const Duration(milliseconds: 800));
         },
+        color: AppTheme.safetyRed,
+        child: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('law_updates')
+              .orderBy('publish_date', descending: true)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return const Center(child: Text('데이터를 불러오는데 실패했습니다.'));
+            }
+
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator(color: AppTheme.safetyRed));
+            }
+
+            final docs = snapshot.data?.docs ?? [];
+            if (docs.isEmpty) {
+              return const Center(child: Text('게시된 법령이 없습니다.'));
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              physics: const AlwaysScrollableScrollPhysics(), // Important for RefreshIndicator
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final law = LawUpdate.fromFirestore(docs[index]);
+                return _buildLawCard(context, law);
+              },
+            );
+          },
+        ),
       ),
     );
   }

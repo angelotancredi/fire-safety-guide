@@ -9,6 +9,7 @@ import 'screens/search_screen.dart';
 import 'screens/detail_screen.dart';
 import 'services/vision_service.dart';
 import 'models/equipment_code.dart';
+import 'dart:ui';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,15 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const FireSafetyApp());
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
 }
 
 class FireSafetyApp extends StatelessWidget {
@@ -27,6 +37,7 @@ class FireSafetyApp extends StatelessWidget {
       title: '소방 세이프티 가이드',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      scrollBehavior: AppScrollBehavior(),
       home: const MainNavigationScreen(),
     );
   }
@@ -73,14 +84,41 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       return;
     }
 
-    // Search in Firestore
+    // Search in Firestore with a more flexible approach
+    // We try to find items that START with the AI identified name, or ARE exact matches.
     final querySnapshot = await FirebaseFirestore.instance
         .collection('equipment_codes')
-        .where('item_name', isEqualTo: itemName)
+        .where('item_name', isGreaterThanOrEqualTo: itemName)
+        .where('item_name', isLessThanOrEqualTo: '$itemName\uf8ff')
         .get();
 
     if (querySnapshot.docs.isEmpty) {
-      _showErrorDialog("'$itemName'에 대한 법적 기준을 찾을 수 없습니다.");
+      // Fallback: Try a broader search by fetching some documents and checking for containment
+      // (This is okay for a small equipment list)
+      final allDocs = await FirebaseFirestore.instance
+          .collection('equipment_codes')
+          .limit(50) // Adjust limit as needed
+          .get();
+      
+      final bestMatch = allDocs.docs.where((doc) {
+        final dbName = (doc.data()['item_name'] as String).toLowerCase();
+        final searchName = itemName.toLowerCase();
+        return dbName.contains(searchName) || searchName.contains(dbName);
+      }).toList();
+
+      if (bestMatch.isEmpty) {
+        _showErrorDialog("'$itemName' (AI 인식)에 대한 구체적인 법적 기준을 찾을 수 없습니다.");
+        return;
+      }
+      
+      final equipment = EquipmentCode.fromFirestore(bestMatch.first);
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailScreen(equipment: equipment),
+        ),
+      );
       return;
     }
 
