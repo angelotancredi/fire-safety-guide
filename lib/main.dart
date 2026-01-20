@@ -61,7 +61,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   ];
 
   Future<void> _takePhotoAndAnalyze() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
     if (photo == null) return;
 
     // Show loading dialog
@@ -74,44 +79,56 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
     );
 
-    final String? itemName = await _visionService.identifyEquipment(photo);
+    final String? aiIdentified = await _visionService.identifyEquipment(photo);
     
     if (!mounted) return;
     Navigator.pop(context); // Close loading dialog
 
-    if (itemName == null || itemName == '알 수 없음') {
-      _showErrorDialog("인식할 수 없는 시설물입니다. 다시 시도해 주세요.");
+    if (aiIdentified == null || aiIdentified == '알 수 없음') {
+      _showErrorDialog("시설물을 식별할 수 없습니다. 다시 시도해 주세요.", aiResult: aiIdentified);
       return;
     }
 
-    // Search in Firestore with a more flexible approach
-    // We try to find items that START with the AI identified name, or ARE exact matches.
-    final querySnapshot = await FirebaseFirestore.instance
+    final String itemName = aiIdentified.trim();
+
+    // 1. Exact or Prefix Search in Firestore
+    var querySnapshot = await FirebaseFirestore.instance
         .collection('equipment_codes')
         .where('item_name', isGreaterThanOrEqualTo: itemName)
         .where('item_name', isLessThanOrEqualTo: '$itemName\uf8ff')
         .get();
 
     if (querySnapshot.docs.isEmpty) {
-      // Fallback: Try a broader search by fetching some documents and checking for containment
-      // (This is okay for a small equipment list)
+      // 2. Fuzzy Matching: Fetch all and compare
       final allDocs = await FirebaseFirestore.instance
           .collection('equipment_codes')
-          .limit(50) // Adjust limit as needed
           .get();
       
-      final bestMatch = allDocs.docs.where((doc) {
-        final dbName = (doc.data()['item_name'] as String).toLowerCase();
-        final searchName = itemName.toLowerCase();
-        return dbName.contains(searchName) || searchName.contains(dbName);
-      }).toList();
+      final searchName = itemName.toLowerCase().replaceAll(' ', '');
+      
+      DocumentSnapshot? bestMatchDoc;
 
-      if (bestMatch.isEmpty) {
-        _showErrorDialog("'$itemName' (AI 인식)에 대한 구체적인 법적 기준을 찾을 수 없습니다.");
+      for (var doc in allDocs.docs) {
+        final dbName = (doc.data() as Map<String, dynamic>)['item_name'].toString().toLowerCase().replaceAll(' ', '');
+        
+        // Exact overlap check
+        if (dbName.contains(searchName) || searchName.contains(dbName)) {
+          bestMatchDoc = doc;
+          break;
+        }
+
+        // Partial match for common terms
+        if (searchName.length >= 2 && dbName.contains(searchName.substring(0, 2))) {
+           bestMatchDoc = doc;
+        }
+      }
+
+      if (bestMatchDoc == null) {
+        _showErrorDialog("'$itemName' (AI 인식)에 대한 상세 정보를 찾을 수 없습니다.", aiResult: aiIdentified);
         return;
       }
       
-      final equipment = EquipmentCode.fromFirestore(bestMatch.first);
+      final equipment = EquipmentCode.fromFirestore(bestMatchDoc);
       if (!mounted) return;
       Navigator.push(
         context,
@@ -133,14 +150,50 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     );
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(String message, {String? aiResult}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.pureWhite,
         surfaceTintColor: AppTheme.pureWhite,
-        title: const Text('인식 결과', style: TextStyle(color: AppTheme.charcoal, fontWeight: FontWeight.bold)),
-        content: Text(message, style: TextStyle(color: AppTheme.charcoal.withOpacity(0.7))),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: AppTheme.safetyRed),
+            SizedBox(width: 10),
+            Text('인식 결과', style: TextStyle(color: AppTheme.charcoal, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message, style: TextStyle(color: AppTheme.charcoal.withOpacity(0.8))),
+            if (aiResult != null && aiResult != '알 수 없음') ...[
+              const SizedBox(height: 20),
+              const Text(
+                'AI가 이렇게 인식했어요:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.charcoal),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.lightGray,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  aiResult,
+                  style: const TextStyle(
+                    color: AppTheme.safetyRed,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
