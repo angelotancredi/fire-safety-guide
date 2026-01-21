@@ -4,13 +4,14 @@ class EquipmentCode {
   final String id;
   final String itemName;
   final String standard;
-  final String lawBasis;
+  final String lawLink;
 
   EquipmentCode({
     required this.id,
     required this.itemName,
     required this.standard,
     required this.lawBasis,
+    required this.lawLink,
   });
 
   factory EquipmentCode.fromFirestore(DocumentSnapshot doc) {
@@ -20,6 +21,7 @@ class EquipmentCode {
       itemName: data['item_name'] ?? '',
       standard: data['standard'] ?? '',
       lawBasis: data['law_basis'] ?? '해당 법적 근거 정보가 없습니다.',
+      lawLink: data['law_link'] ?? '',
     );
   }
 }
