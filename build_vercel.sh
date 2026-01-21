@@ -2,8 +2,9 @@
 
 # 1. Install Flutter
 echo "Downloading Flutter SDK..."
+rm -rf flutter
 git clone https://github.com/flutter/flutter.git -b stable --depth 1
-export PATH="$PATH:`pwd`/flutter/bin"
+export PATH="$PATH:$(pwd)/flutter/bin"
 
 # 2. Verify Flutter installation
 echo "Checking Flutter version..."
@@ -22,19 +23,19 @@ flutter pub get
 echo "Building Flutter Web..."
 flutter build web --release --base-href /
 
-# 6. Prepare public directory
-echo "Moving build to public/..."
-rm -rf public
-mkdir -p public
-cp -r build/web/* public/
+# 6. Prepare dist directory
+echo "Moving build to dist/..."
+rm -rf dist
+mkdir -p dist
+cp -rv build/web/* dist/
 
-# 7. Verify public content
-echo "Verifying public/ content:"
-ls -la public/
+# 7. Verify dist content
+echo "Verifying dist/ content:"
+ls -la dist/
 
-if [ ! -f "public/main.dart.js" ]; then
-    echo "ERROR: main.dart.js not found in public/!"
+if [ ! -f "dist/main.dart.js" ]; then
+    echo "ERROR: main.dart.js not found in dist/!"
     exit 1
 fi
 
-echo "Build complete! Files are in 'public' directory."
+echo "Build complete! Files are in 'dist' directory."
