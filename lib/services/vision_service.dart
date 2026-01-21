@@ -6,12 +6,12 @@ class VisionService {
   // IMPORTANT: The user should provide their own Gemini API Key
   static const String _apiKey = "AIzaSyDTVOCjJ3tmTC-t9W_HzPImmxan2k4x0i8";
 
-  // List of models to try in order of preference
+  // List of models verified to exist for this API Key
   final List<String> _modelsToTry = [
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-001',
-    'gemini-1.5-pro',
-    'gemini-pro-vision', // Legacy fallback
+    'gemini-2.0-flash',
+    'gemini-flash-latest',
+    'gemini-pro-latest',
+    'gemini-2.0-flash-lite-preview',
   ];
 
   Future<String?> identifyEquipment(XFile imageFile, List<String> equipmentList) async {
