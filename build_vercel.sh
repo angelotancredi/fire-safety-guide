@@ -20,12 +20,10 @@ flutter pub get
 
 # 5. Build web
 echo "Building Flutter Web..."
-flutter build web --release
+flutter build web --release --base-href /
 
-# 6. Prepare clean output directory
-echo "Preparing public directory..."
-mkdir -p public
-cp -r build/web/* public/
-cp vercel.json public/
+# 6. Verify output
+echo "Checking build output..."
+ls -R build/web
 
-echo "Build complete! Files are in 'public' directory."
+echo "Build complete! Files are in 'build/web' directory."
