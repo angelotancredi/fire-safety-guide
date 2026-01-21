@@ -92,54 +92,47 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       // 2. Identify with AI using the dynamic list
       final String? aiIdentified = await _visionService.identifyEquipment(photo, equipmentNames);
       
+      // Browser Console Log for Debugging
+      if (kIsWeb) {
+        print('--- AI Vision Debug (v1.0.7) ---');
+        print('Raw AI Output: "$aiIdentified"');
+        print('Available DB Items: ${equipmentNames.join(", ")}');
+      }
+      
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
       if (aiIdentified == null || aiIdentified == '없음' || aiIdentified == '알 수 없음') {
-        _showErrorDialog("등록된 시설물 중 일치하는 것을 찾을 수 없습니다.", aiResult: aiIdentified);
+        _showErrorDialog("AI가 어떤 시설물인지 식별하지 못했습니다. (v1.0.7)", aiResult: aiIdentified);
         return;
       }
 
-      final String itemName = aiIdentified.trim();
+      // Aggressive Normalization: Trim, Lowercase, Remove Spaces/Punctuation
+      final String normalizedAi = aiIdentified.trim().toLowerCase().replaceAll(RegExp(r'[^\wㄱ-ㅎ가-힣]'), '').replaceAll(' ', '');
 
-      // 3. Directly search for the exact name AI picked from our list
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('equipment_codes')
-          .where('item_name', isEqualTo: itemName)
-          .get();
-
-      if (querySnapshot.docs.isEmpty) {
-        // Fallback: If AI picked something slightly off despite instructions, use fuzzy match
-        final searchName = itemName.toLowerCase().replaceAll(' ', '');
-        DocumentSnapshot? fallbackDoc;
+      // 3. Flexible Search (Fuzzy Matching) - Reciprocal Containment
+      DocumentSnapshot? bestMatchDoc;
+      
+      for (var doc in equipmentSnapshot.docs) {
+        final rawDbName = (doc.data() as Map<String, dynamic>)['item_name'] as String;
+        final normalizedDb = rawDbName.toLowerCase().replaceAll(RegExp(r'[^\wㄱ-ㅎ가-힣]'), '').replaceAll(' ', '');
         
-        for (var doc in equipmentSnapshot.docs) {
-          final dbName = (doc.data() as Map<String, dynamic>)['item_name'].toString().toLowerCase().replaceAll(' ', '');
-          if (dbName.contains(searchName) || searchName.contains(dbName)) {
-            fallbackDoc = doc;
-            break;
-          }
+        // Match if AI result is in DB name (e.g., '소화기' in '분말소화기')
+        // OR if DB name is in AI result (e.g., '분말소화기' in '아마 분말소화기인듯')
+        if (normalizedDb.contains(normalizedAi) || normalizedAi.contains(normalizedDb)) {
+          bestMatchDoc = doc;
+          break;
         }
+      }
 
-        if (fallbackDoc == null) {
-          _showErrorDialog("'$itemName'에 대한 상세 정보를 찾을 수 없습니다. (v1.0.5)", aiResult: aiIdentified);
-          return;
-        }
-        
-        final equipment = EquipmentCode.fromFirestore(fallbackDoc);
-        debugPrint('Fuzzy Match Success: ${equipment.itemName}');
-        if (!mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailScreen(equipment: equipment),
-          ),
-        );
+      if (bestMatchDoc == null) {
+        _showErrorDialog("AI는 '$aiIdentified'라고 인식했으나, 매칭되는 데이터베이스(DB) 정보가 없습니다. (v1.0.7)", aiResult: aiIdentified);
         return;
       }
 
-      final equipment = EquipmentCode.fromFirestore(querySnapshot.docs.first);
-      debugPrint('Exact Match Success: ${equipment.itemName}');
+      final equipment = EquipmentCode.fromFirestore(bestMatchDoc);
+      debugPrint('Match Success: ${equipment.itemName} (v1.0.7)');
+      
       if (!mounted) return;
       Navigator.push(
         context,
@@ -150,7 +143,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      _showErrorDialog("오류가 발생했습니다: $e (System v1.0.5)");
+      _showErrorDialog("오류가 발생했습니다: $e (System v1.0.7)");
     }
   }
 
