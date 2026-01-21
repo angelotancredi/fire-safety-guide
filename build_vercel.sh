@@ -1,9 +1,11 @@
 #!/bin/bash
+set -e # Exit immediately if a command exits with a non-zero status.
 
 # 1. Install Flutter
 echo "Downloading Flutter SDK..."
-rm -rf flutter
-git clone https://github.com/flutter/flutter.git -b stable --depth 1
+if [ ! -d "flutter" ]; then
+    git clone https://github.com/flutter/flutter.git -b stable --depth 1
+fi
 export PATH="$PATH:$(pwd)/flutter/bin"
 
 # 2. Verify Flutter installation
@@ -25,7 +27,7 @@ flutter pub get
 
 # 5. Build web
 echo "Building Flutter Web (Release)..."
-flutter build web --release --base-href / --no-pub
+flutter build web --release --base-href /
 
 # 6. Prepare dist directory
 echo "Moving build to dist/..."
@@ -36,18 +38,23 @@ mkdir -p dist
 echo "Checking build/web content:"
 ls -la build/web/
 
+# Use rsync-like behavior or deep copy
 cp -rv build/web/* dist/
 
 # 7. Verify dist content
 echo "Verifying dist/ content:"
 ls -la dist/
 
-# Check for both main.dart.js and fluttering.js (sometimes naming varies)
-if [ ! -f "dist/main.dart.js" ] && [ ! -f "dist/flutter.js" ]; then
-    echo "ERROR: Critical build assets not found in dist/!"
-    find dist/ -maxdepth 2
+# Final check for critical assets
+if [ ! -f "dist/main.dart.js" ]; then
+    echo "ERROR: main.dart.js not found in dist/!"
+    ls -R dist/
+    exit 1
+fi
+
+if [ ! -f "dist/index.html" ]; then
+    echo "ERROR: index.html not found in dist/!"
     exit 1
 fi
 
 echo "Build complete! Files are in 'dist' directory."
-ls -R dist/
