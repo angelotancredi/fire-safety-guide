@@ -34,12 +34,13 @@ class VisionService {
       ];
 
       final response = await _model.generateContent(content);
-      final identified = response.text?.trim() ?? '없음';
+      final identified = response.text?.trim();
+      if (identified == null || identified.isEmpty) return '없음';
       debugPrint('AI Identified (Strict): $identified');
       return identified;
     } catch (e) {
       debugPrint('Error identifying equipment: $e');
-      return null;
+      return '에러: $e';
     }
   }
 }
