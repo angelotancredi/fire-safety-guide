@@ -122,11 +122,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
 
         if (fallbackDoc == null) {
-          _showErrorDialog("'$itemName'에 대한 상세 정보를 찾을 수 없습니다. (v1.0.4)", aiResult: aiIdentified);
+          _showErrorDialog("'$itemName'에 대한 상세 정보를 찾을 수 없습니다. (v1.0.5)", aiResult: aiIdentified);
           return;
         }
         
         final equipment = EquipmentCode.fromFirestore(fallbackDoc);
+        debugPrint('Fuzzy Match Success: ${equipment.itemName}');
         if (!mounted) return;
         Navigator.push(
           context,
@@ -138,6 +139,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       }
 
       final equipment = EquipmentCode.fromFirestore(querySnapshot.docs.first);
+      debugPrint('Exact Match Success: ${equipment.itemName}');
       if (!mounted) return;
       Navigator.push(
         context,
@@ -148,7 +150,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      _showErrorDialog("오류가 발생했습니다: $e");
+      _showErrorDialog("오류가 발생했습니다: $e (System v1.0.5)");
     }
   }
 
