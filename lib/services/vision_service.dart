@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 class VisionService {
   // IMPORTANT: The user should provide their own Gemini API Key
-  static const String _apiKey = "AIzaSyBCfcuXTMuQ9Scqr0Xyzg426Y1Ju1Q2tfw";
+  static const String _apiKey = "AIzaSyDTVOCjJ3tmTC-t9W_HzPImmxan2k4x0i8";
 
   // List of models to try in order of preference
   final List<String> _modelsToTry = [
