@@ -99,7 +99,9 @@ class DetailScreen extends StatelessWidget {
                   backgroundColor: AppTheme.charcoal,
                   foregroundColor: AppTheme.pureWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: BorderRadius.circular(12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                 ),
               ),

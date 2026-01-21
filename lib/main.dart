@@ -102,7 +102,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final String? aiIdentified = await _visionService.identifyEquipment(photo, equipmentNames);
       
       if (kIsWeb) {
-        print('--- AI Vision Debug (v1.2.0) ---');
+        print('--- AI Vision Debug (v1.2.1) ---');
         print('Raw AI Output: "$aiIdentified"');
       }
       
@@ -110,7 +110,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       Navigator.pop(context); // Close loading dialog
 
       if (aiIdentified == null || aiIdentified == '없음' || aiIdentified == '알 수 없음' || aiIdentified.startsWith('에러:')) {
-        _showErrorDialog("AI가 어떤 시설물인지 판단할 수 없습니다. (v1.2.0)", aiResult: aiIdentified ?? '응답 없음');
+        _showErrorDialog("AI가 어떤 시설물인지 판단할 수 없습니다. (v1.2.1)", aiResult: aiIdentified ?? '응답 없음');
         return;
       }
 
@@ -148,7 +148,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       }
 
       if (bestMatchDoc == null) {
-        _showErrorDialog("AI는 '$aiIdentified'(으)로 인식했으나, DB 목록 중 일치하는 시설물이 없습니다. (v1.2.0)", aiResult: aiIdentified);
+        _showErrorDialog("AI는 '$aiIdentified'(으)로 인식했으나, DB 목록 중 일치하는 시설물이 없습니다. (v1.2.1)", aiResult: aiIdentified);
         return;
       }
 

@@ -4,6 +4,7 @@ class EquipmentCode {
   final String id;
   final String itemName;
   final String standard;
+  final String lawBasis;
   final String lawLink;
 
   EquipmentCode({
