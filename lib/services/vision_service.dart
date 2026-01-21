@@ -10,7 +10,7 @@ class VisionService {
 
   VisionService()
       : _model = GenerativeModel(
-          model: 'gemini-1.5-flash',
+          model: 'gemini-1.5-flash-latest',
           apiKey: _apiKey,
         );
 
