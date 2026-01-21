@@ -16,6 +16,10 @@ flutter clean
 flutter config --enable-web
 
 # 4. Get dependencies
+echo "Creating .env file from environment variables..."
+echo "LAW_API_OC=$LAW_API_OC" > .env
+echo ".env file created (Size: $(stat -c%s .env) bytes)"
+
 echo "Getting dependencies..."
 flutter pub get
 

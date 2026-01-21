@@ -37,20 +37,20 @@
 <body>
   <script>
     // App Version Configuration
-    window.APP_VERSION = '1.2.2';
+    window.APP_VERSION = '1.2.3';
     console.log('Booting Fire Safety Guide (v' + window.APP_VERSION + ')...');
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         // Register without dynamic query param to avoid registration loops
-        navigator.serviceWorker.register('flutter_service_worker.js?v=1.2.2')
+        navigator.serviceWorker.register('flutter_service_worker.js?v=1.2.3')
           .then(function (reg) {
             reg.onupdatefound = function () {
               const worker = reg.installing;
               worker.onstatechange = function () {
                 if (worker.state === 'installed' && navigator.serviceWorker.controller) {
                   console.log('New update available (v' + window.APP_VERSION + '). Please restart the app.');
-                  alert('새로운 업데이트가 있습니다! 브라우저를 다시 시작하여 적용해 주세요. (v1.2.2)');
+                  alert('새로운 업데이트가 있습니다! 브라우저를 다시 시작하여 적용해 주세요. (v1.2.3)');
                 }
               };
             };
@@ -58,7 +58,7 @@
       });
     }
   </script>
-  <script src="flutter_bootstrap.js?v=1.2.2" async></script>
+  <script src="flutter_bootstrap.js?v=1.2.3" async></script>
 </body>
 
 </html>
