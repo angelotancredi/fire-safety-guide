@@ -55,6 +55,24 @@ class DetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _viewLatestLaw(context),
+                icon: const Icon(Icons.gavel_rounded),
+                label: const Text('최신 법령 보기'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.charcoal,
+                  foregroundColor: AppTheme.pureWhite,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
             const Text(
               '법적 근거',
               style: TextStyle(
@@ -85,24 +103,6 @@ class DetailScreen extends StatelessWidget {
                   fontSize: 14,
                   color: AppTheme.charcoal.withOpacity(0.7),
                   height: 1.7,
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _viewLatestLaw(context),
-                icon: const Icon(Icons.gavel_rounded),
-                label: const Text('최신 법령 보기'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.charcoal,
-                  foregroundColor: AppTheme.pureWhite,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
                 ),
               ),
             ),
