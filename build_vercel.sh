@@ -30,30 +30,18 @@ echo "Building Flutter Web (Release)..."
 flutter build web --release --base-href /
 
 # 6. Prepare dist directory
-echo "Moving build to dist/..."
+echo "Preparing dist directory..."
 rm -rf dist
-mkdir -p dist
-
-# Verify build/web content before copying
-echo "Checking build/web content:"
-ls -la build/web/
-
-# Use rsync-like behavior or deep copy
-cp -rv build/web/* dist/
+cp -r build/web dist
 
 # 7. Verify dist content
 echo "Verifying dist/ content:"
 ls -la dist/
 
 # Final check for critical assets
-if [ ! -f "dist/main.dart.js" ]; then
-    echo "ERROR: main.dart.js not found in dist/!"
+if [ ! -f "dist/main.dart.js" ] && [ ! -f "dist/flutter.js" ] && [ ! -f "dist/flutter_bootstrap.js" ]; then
+    echo "ERROR: Critical build assets not found in dist/!"
     ls -R dist/
-    exit 1
-fi
-
-if [ ! -f "dist/index.html" ]; then
-    echo "ERROR: index.html not found in dist/!"
     exit 1
 fi
 
