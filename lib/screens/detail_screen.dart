@@ -117,7 +117,7 @@ class DetailScreen extends StatelessWidget {
     // e.g., MST=264350 (화재예방, 소방시설 설치·유지 및 안전관리에 관한 법률)
     final String targetLink = equipment.lawLink.isNotEmpty 
         ? equipment.lawLink 
-        : 'MST=218621&JO=10'; // Default sample: Fire Safety Installation Standard Art 10
+        : 'MST=236977&JO=12'; // Default sample: Fire Safety Installation Act Art 12
 
     showDialog(
       context: context,
