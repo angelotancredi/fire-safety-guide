@@ -89,49 +89,68 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           .map((doc) => (doc.data() as Map<String, dynamic>)['item_name'] as String)
           .toList();
 
+      if (kIsWeb) {
+        print('--- Firestore Data Debug (v1.0.8) ---');
+        print('Total DB Items found: ${equipmentNames.length}');
+        print('DB Items: ${equipmentNames.join(", ")}');
+      }
+
       // 2. Identify with AI using the dynamic list
       final String? aiIdentified = await _visionService.identifyEquipment(photo, equipmentNames);
       
-      // Browser Console Log for Debugging
       if (kIsWeb) {
-        print('--- AI Vision Debug (v1.0.7) ---');
+        print('--- AI Vision Debug (v1.0.8) ---');
         print('Raw AI Output: "$aiIdentified"');
-        print('Available DB Items: ${equipmentNames.join(", ")}');
       }
       
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
 
       if (aiIdentified == null || aiIdentified == '없음' || aiIdentified == '알 수 없음') {
-        _showErrorDialog("AI가 어떤 시설물인지 식별하지 못했습니다. (v1.0.7)", aiResult: aiIdentified);
+        _showErrorDialog("AI가 어떤 시설물인지 식별하지 못했습니다. (v1.0.8)", aiResult: aiIdentified);
         return;
       }
 
-      // Aggressive Normalization: Trim, Lowercase, Remove Spaces/Punctuation
-      final String normalizedAi = aiIdentified.trim().toLowerCase().replaceAll(RegExp(r'[^\wㄱ-ㅎ가-힣]'), '').replaceAll(' ', '');
+      // Aggressive Normalization Function
+      String normalize(String input) {
+        return input.trim().toLowerCase().replaceAll(RegExp(r'[^\wㄱ-ㅎ가-힣]'), '').replaceAll(' ', '');
+      }
 
-      // 3. Flexible Search (Fuzzy Matching) - Reciprocal Containment
+      final String normalizedAi = normalize(aiIdentified);
+
+      // 3. Flexible Search (Fuzzy Matching)
       DocumentSnapshot? bestMatchDoc;
       
+      // Step A: Precise Match first
       for (var doc in equipmentSnapshot.docs) {
         final rawDbName = (doc.data() as Map<String, dynamic>)['item_name'] as String;
-        final normalizedDb = rawDbName.toLowerCase().replaceAll(RegExp(r'[^\wㄱ-ㅎ가-힣]'), '').replaceAll(' ', '');
-        
-        // Match if AI result is in DB name (e.g., '소화기' in '분말소화기')
-        // OR if DB name is in AI result (e.g., '분말소화기' in '아마 분말소화기인듯')
-        if (normalizedDb.contains(normalizedAi) || normalizedAi.contains(normalizedDb)) {
+        final normalizedDb = normalize(rawDbName);
+        if (normalizedDb == normalizedAi) {
           bestMatchDoc = doc;
           break;
         }
       }
 
+      // Step B: Containment Match if no precise match
       if (bestMatchDoc == null) {
-        _showErrorDialog("AI는 '$aiIdentified'라고 인식했으나, 매칭되는 데이터베이스(DB) 정보가 없습니다. (v1.0.7)", aiResult: aiIdentified);
+        for (var doc in equipmentSnapshot.docs) {
+          final rawDbName = (doc.data() as Map<String, dynamic>)['item_name'] as String;
+          final normalizedDb = normalize(rawDbName);
+          
+          if (normalizedDb.contains(normalizedAi) || normalizedAi.contains(normalizedDb)) {
+            bestMatchDoc = doc;
+            break;
+          }
+        }
+      }
+
+      if (bestMatchDoc == null) {
+        _showErrorDialog("AI는 '$aiIdentified'(으)로 인식했으나, 등록된 시설물 목록에서 찾을 수 없습니다. (v1.0.8-FIXED)", aiResult: aiIdentified);
         return;
       }
 
       final equipment = EquipmentCode.fromFirestore(bestMatchDoc);
-      debugPrint('Match Success: ${equipment.itemName} (v1.0.7)');
+      debugPrint('Match Success: ${equipment.itemName} (v1.0.8)');
       
       if (!mounted) return;
       Navigator.push(

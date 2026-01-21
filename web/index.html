@@ -37,13 +37,13 @@
 <body>
   <script>
     // App Version Configuration
-    window.APP_VERSION = '1.0.7';
+    window.APP_VERSION = '1.0.9';
     console.log('Booting Fire Safety Guide (v' + window.APP_VERSION + ')...');
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         // Register without dynamic query param to avoid registration loops
-        navigator.serviceWorker.register('flutter_service_worker.js')
+        navigator.serviceWorker.register('flutter_service_worker.js?v=1.0.9')
           .then(function (reg) {
             reg.onupdatefound = function () {
               const worker = reg.installing;
@@ -57,7 +57,7 @@
       });
     }
   </script>
-  <script src="flutter_bootstrap.js?v=1.0.7" async></script>
+  <script src="flutter_bootstrap.js?v=1.0.9" async></script>
 </body>
 
 </html>

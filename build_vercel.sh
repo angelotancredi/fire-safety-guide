@@ -10,6 +10,8 @@ echo "Checking Flutter version..."
 flutter --version
 
 # 3. Enable web
+echo "Cleaning flutter build..."
+flutter clean
 flutter config --enable-web
 
 # 4. Get dependencies
