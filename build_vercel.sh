@@ -22,8 +22,19 @@ flutter pub get
 echo "Building Flutter Web..."
 flutter build web --release --base-href /
 
-# 6. Verify output
-echo "Checking build output..."
-ls -R build/web
+# 6. Prepare public directory
+echo "Moving build to public/..."
+rm -rf public
+mkdir -p public
+cp -r build/web/* public/
 
-echo "Build complete! Files are in 'build/web' directory."
+# 7. Verify public content
+echo "Verifying public/ content:"
+ls -la public/
+
+if [ ! -f "public/main.dart.js" ]; then
+    echo "ERROR: main.dart.js not found in public/!"
+    exit 1
+fi
+
+echo "Build complete! Files are in 'public' directory."
