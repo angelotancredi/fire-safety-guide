@@ -10,7 +10,7 @@ class VisionService {
 
   VisionService()
       : _model = GenerativeModel(
-          model: 'gemini-1.5-flash-latest',
+          model: 'gemini-1.5-flash',
           apiKey: _apiKey,
         );
 
@@ -38,9 +38,10 @@ class VisionService {
       if (identified == null || identified.isEmpty) return '없음';
       debugPrint('AI Identified (Strict): $identified');
       return identified;
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error identifying equipment: $e');
-      return '에러: $e';
+      debugPrint('Stack trace: $stack');
+      return '에러: $e\n\n상세: ${stack.toString().split('\n').take(3).join('\n')}';
     }
   }
 }
