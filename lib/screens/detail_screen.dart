@@ -113,12 +113,6 @@ class DetailScreen extends StatelessWidget {
   }
 
   void _viewLatestLaw(BuildContext context) async {
-    // For testing, if lawLink is empty, we can use a sample MST for "Fire Safety Act"
-    // e.g., MST=264350 (화재예방, 소방시설 설치·유지 및 안전관리에 관한 법률)
-    final String targetLink = equipment.lawLink.isNotEmpty 
-        ? equipment.lawLink 
-        : 'MST=236977&JO=12'; // Default sample: Fire Safety Installation Act Art 12
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -127,7 +121,30 @@ class DetailScreen extends StatelessWidget {
 
     try {
       final lawService = LawService();
-      final result = await lawService.fetchLawDetail(targetLink);
+      String? targetMst = equipment.lawMst;
+      String? targetJo = equipment.lawClause;
+
+      // Fallback 1: If MST is missing, search by itemName
+      if (targetMst.isEmpty) {
+        dev.log('Law MST missing for ${equipment.itemName}. Searching by keyword...');
+        targetMst = await lawService.searchMstId(equipment.itemName) ?? '';
+        targetJo = ''; // Clear clause when searching from scratch
+      }
+
+      // Fallback 2: If MST still missing, try legacy lawLink if available
+      String? result;
+      if (targetMst.isNotEmpty) {
+        result = await lawService.fetchLawDetail(
+          mstId: targetMst,
+          joId: targetJo.isNotEmpty ? targetJo : null,
+        );
+      } else if (equipment.lawLink.isNotEmpty) {
+        result = await lawService.fetchLawDetailLegacy(equipment.lawLink);
+      } else {
+        // Fallback 3: Use a general Fire Safety Act MST as last resort
+        const String defaultMst = '236977'; // 소방시설법
+        result = await lawService.fetchLawDetail(mstId: defaultMst);
+      }
       
       if (!context.mounted) return;
       Navigator.pop(context); // Close loading
