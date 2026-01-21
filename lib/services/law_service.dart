@@ -5,7 +5,7 @@ import 'dart:developer' as dev;
 
 class LawService {
   final String? _ocId = dotenv.env['LAW_API_OC'];
-  static const String _baseUrl = 'http://www.law.go.kr/DRF/lawService.do';
+  static const String _baseUrl = 'https://www.law.go.kr/DRF/lawService.do';
 
   Future<String?> fetchLawDetail(String lawLink) async {
     if (_ocId == null || _ocId!.isEmpty) {
